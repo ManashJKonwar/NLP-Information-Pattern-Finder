@@ -1,0 +1,7 @@
+# Generic libarries
+# ------------------------------------------------------------------------------
+tqdm==4.64.1  # https://pypi.org/project/tqdm/4.64.1/  # Fast, Extensible Progress Meter
+
+# Data Generation and Manipulation
+# ------------------------------------------------------------------------------
+pandas==1.5.2  # https://pypi.org/project/pandas/1.5.2/  # Dataframe Related Operations
