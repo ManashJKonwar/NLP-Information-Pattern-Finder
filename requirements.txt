@@ -1,7 +1,13 @@
 # Generic libarries
 # ------------------------------------------------------------------------------
 tqdm==4.64.1  # https://pypi.org/project/tqdm/4.64.1/  # Fast, Extensible Progress Meter
+nbformat==5.7.1  # https://pypi.org/project/nbformat/5.7.1/  # Jupyter Notebook format
+dask==2022.12.1  # https://pypi.org/project/dask/2022.12.1/  # Parallel PyData with Task Scheduling
 
 # Data Generation and Manipulation
 # ------------------------------------------------------------------------------
 pandas==1.5.2  # https://pypi.org/project/pandas/1.5.2/  # Dataframe Related Operations
+
+# NLU based libraries
+# ------------------------------------------------------------------------------
+nltk==3.8.1  # https://pypi.org/project/nltk/3.8.1/  # Natural Language Toolkit
