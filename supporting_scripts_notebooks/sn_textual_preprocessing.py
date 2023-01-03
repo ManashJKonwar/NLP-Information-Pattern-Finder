@@ -17,6 +17,13 @@ This script is intended to perform textual preprocessing on intended texts. It p
 - Remove redundant domain specific words  
 - Remove extra spaces 
 """
+import re
+import nltk
+import string
+
+from nltk.stem import PorterStemmer
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import word_tokenize, sent_tokenize
 
 contractions = {
     "ain't": "am not",
