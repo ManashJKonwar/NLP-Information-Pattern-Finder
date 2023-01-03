@@ -3,6 +3,7 @@
 tqdm==4.64.1  # https://pypi.org/project/tqdm/4.64.1/  # Fast, Extensible Progress Meter
 nbformat==5.7.1  # https://pypi.org/project/nbformat/5.7.1/  # Jupyter Notebook format
 dask==2022.12.1  # https://pypi.org/project/dask/2022.12.1/  # Parallel PyData with Task Scheduling
+ipywidgets==8.0.4  # https://pypi.org/project/ipywidgets/8.0.4/  # Jupyter interactive widgets
 
 # Data Generation and Manipulation
 # ------------------------------------------------------------------------------
@@ -11,3 +12,4 @@ pandas==1.5.2  # https://pypi.org/project/pandas/1.5.2/  # Dataframe Related Ope
 # NLU based libraries
 # ------------------------------------------------------------------------------
 nltk==3.8.1  # https://pypi.org/project/nltk/3.8.1/  # Natural Language Toolkit
+spacy==3.4.4  # https://pypi.org/project/spacy/3.4.4/  # Industrial-strength Natural Language Processing (NLP) in Python
