@@ -9,6 +9,178 @@ __status__ = "Development"
 
 import pandas as pd
 
+# Function for rule 1: noun(subject), verb, noun(object)
+def rule_nvn(text: str, spacy_loaded_model=None) -> list:
+    """
+    This function is responsible for extracting all possible combinations of 
+    NOUN / PROPER NOUN / PRONOUN (subject) <-> VERB <-> NOUN / PROPER NOUN that is seen in the 
+    input text.
+
+    args:
+        text (str): Input text for which NVN phrases needs to be extracted
+        spacy_loaded_model (spacy model object, optional): spacy model to be used for accessing the POS tags. Defaults to None.
+
+    returns:
+        list: list of dictionaries where each dictionary is representation of one NVN phrase being detected
+        e.g. [{'phrase': 'ONS revise rate', 'verb': 'revise'},
+            {'phrase': 'number report figures', 'verb': 'report'},
+            {'phrase': 'retailers endure Christmas', 'verb': 'endure'}]
+    """
+    doc = spacy_loaded_model(text)
+    sent = []
+    for token in doc:
+        # if the token is a verb
+        if (token.pos_=='VERB'):
+            phrase =''
+            
+            # only extract noun or pronoun subjects
+            for sub_tok in token.lefts:
+                if (sub_tok.dep_ in ['nsubj','nsubjpass']) and (sub_tok.pos_ in ['NOUN','PROPN','PRON']):
+                    # add subject to the phrase
+                    phrase += sub_tok.text
+                    # save the root of the verb in phrase
+                    phrase += ' '+token.lemma_ 
+                    # check for noun or pronoun direct objects
+                    for sub_tok in token.rights:
+                        # save the object in the phrase
+                        if (sub_tok.dep_ in ['dobj']) and (sub_tok.pos_ in ['NOUN','PROPN']):
+                            phrase += ' '+sub_tok.text
+                            sent.append({'phrase': phrase, 'verb': token.lemma_})
+    return sent
+
+# Function for rule 2: adjective noun
+def rule_an(text: str, spacy_loaded_model=None) -> list:
+    """
+    This function is responsible for extracting all possible combinations of 
+    ADJECTIVE / COMPOUND <-> NOUN (subject, object, nominal subject, passive nominal subject)
+
+    args:
+        text (str): Input text for which AN phrases needs to be extracted
+        spacy_loaded_model (spacy model object, optional): spacy model to be used for accessing the POS tags. Defaults to None.
+
+    returns:
+        list : list of dictionaries where each dictionary is representation of one AN phrase being detected
+        e.g. [{'phrase': 'significant growth', 'noun': 'growth'},
+            {'phrase': 'earlier caution', 'noun': 'caution'},
+            {'phrase': 'poor December figures', 'noun': 'figures'}]
+    """
+    doc = spacy_loaded_model(text)
+    pat = []
+    
+    # iterate over tokens
+    for token in doc:
+        phrase = ''
+        # if the word is a subject noun or an object noun
+        if (token.pos_ == 'NOUN')\
+            and (token.dep_ in ['dobj','pobj','nsubj','nsubjpass']):
+            
+            # iterate over the children nodes
+            for subtoken in token.children:
+                # if word is an adjective or has a compound dependency
+                if (subtoken.pos_ == 'ADJ') or (subtoken.dep_ == 'compound'):
+                    phrase += subtoken.text + ' '
+                    
+            if len(phrase)!=0:
+                phrase += token.text
+             
+        if  len(phrase)!=0:
+            pat.append({'phrase':phrase, 'noun': token.text})
+    return pat
+
+# Function for rule 3: noun, preposition, noun
+def rule_npn(text: str, spacy_loaded_model=None) -> list:
+    """
+    This function is responsible for extracting all possible combinations of 
+    NOUN <-> PREPOSITION <-> NOUN / PROPER NOUN
+
+    args:
+        text (str): Input text for which NPN phrases needs to be extracted
+        spacy_loaded_model (_type_, optional): spacy model to be used for accessing the POS tags. Defaults to None.
+
+    returns:
+        list: list of dictionaries where each dictionary is representation of one NPN phrase being detected
+        e.g. [{'phrase': 'number of retailers', 'preposition': 'of'},
+            {'phrase': 'caution from King', 'preposition': 'from'},
+            {'phrase': 'way below booms', 'preposition': 'below'}]
+    """
+    doc = spacy_loaded_model(text)
+    sent = []
+    
+    for token in doc:
+        # look for prepositions
+        if token.pos_=='ADP':
+            phrase = ''
+            # if its head word is a noun
+            if token.head.pos_=='NOUN':
+                # append noun and preposition to phrase
+                phrase += token.head.text
+                phrase += ' '+token.text
+
+                # check the nodes to the right of the preposition
+                for right_tok in token.rights:
+                    # append if it is a noun or proper noun
+                    if (right_tok.pos_ in ['NOUN','PROPN']):
+                        phrase += ' '+right_tok.text
+                
+                if len(phrase)>2:
+                    sent.append({'phrase':phrase, 'preposition': token.text})
+    return sent
+
+# Function for rule 4: Combination of rulw 1 + rule 2
+def rule_ad_mod(doc, text: str, index: int) -> str:
+    # doc = nlp_spacy_en_model(text)
+    phrase = ''
+    
+    for token in doc:
+        if token.i == index:
+            for subtoken in token.children:
+                if (subtoken.pos_ == 'ADJ'):
+                    phrase += ' '+subtoken.text
+            break
+    return phrase
+
+def rule_nvn_mod(text: str, spacy_loaded_model=None) -> list:
+    """
+    This function is responsible for extracting all possible combinations of 
+    COMPOUND / ADJ <-> NOUN / PROPER NOUN / PRONOUN (subject) <-> VERB <-> COMPOUND / ADJ <-> NOUN / PROPER NOUN that is seen in the 
+    input text.
+
+    args:
+        text (str): Input text for which compound / adjective NVN phrases needs to be extracted
+        spacy_loaded_model (spacy model object, optional): spacy model to be used for accessing the POS tags. Defaults to None.
+
+    returns:
+        list: list of dictionaries where each dictionary is representation of one NVN phrase being detected
+        e.g. [{'phrase': ' ONS revise annual rate', 'verb': 'revise'},
+            {'phrase': ' number report poor figures', 'verb': 'report'},
+            {'phrase': ' retailers endure tougher Christmas', 'verb': 'endure'}]
+    """
+    doc = spacy_loaded_model(text)
+    sent = []
+    
+    for token in doc:
+        # root word
+        if (token.pos_=='VERB'):
+            phrase =''
+            
+            # only extract noun or pronoun subjects
+            for sub_tok in token.lefts:
+                if (sub_tok.dep_ in ['nsubj','nsubjpass']) and (sub_tok.pos_ in ['NOUN','PROPN','PRON']):
+                    adj = rule_ad_mod(doc, text, sub_tok.i)
+                    phrase += adj + ' ' + sub_tok.text
+
+                    # save the root word of the word
+                    phrase += ' '+token.lemma_ 
+
+                    # check for noun or pronoun direct objects
+                    for sub_tok in token.rights:
+                        if (sub_tok.dep_ in ['dobj']) and (sub_tok.pos_ in ['NOUN','PROPN']):
+                            adj = rule_ad_mod(doc, text, sub_tok.i)
+                            # add adj based noun
+                            phrase += adj+' '+sub_tok.text
+                            sent.append({'phrase':phrase, 'verb':token.lemma_})
+    return sent
+
 class PatternFinder:
     def __init__(self, data: pd.DataFrame, textual_col: str, pattern: list = ['nvn','an','npn','nvn_mod'], spacy_model_name: str = 'en_core_web_lg') -> None:
         """
