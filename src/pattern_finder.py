@@ -7,7 +7,11 @@ __maintainer__ = "konwar.m"
 __email__ = "rickykonwar@gmail.com"
 __status__ = "Development"
 
+import os
 import pandas as pd
+from tqdm import tqdm
+
+from supporting_scripts_notebooks.sn_textual_preprocessing import *
 from utility.utility import load_spacy_model
 
 # Function for rule 1: noun(subject), verb, noun(object)
@@ -268,3 +272,40 @@ class PatternFinder:
         """
         """
         pass
+    
+if __name__ == "__main__":
+    # Test file path
+    test_data_path = os.path.join('input','news_articles_dataset.csv')
+    
+    # File reading configurations
+    sample_frac = 0.1
+    spacy_model_name = 'en_core_web_lg'
+    
+    # Reading input file
+    input_data = pd.read_csv(input_filepath)
+    input_data.columns = [col_name.upper() for col_name in input_data.columns]
+    print(input_data.shape)
+    
+    # Performing stratified sampling for the input data
+    sample_data = input_data.groupby('CATEGORIES', group_keys=False).apply(lambda x: x.sample(frac=0.1, random_state=42))
+    print(sample_data.shape)
+    
+    # Preprocessing data before finding patterns
+    def preprocess_text(text):
+        result = remove_urls(text)
+        result = remove_mentions_hashtags(result)
+        result = remove_contractions(result)
+        result = remove_stopwords_punc_nos(result, 
+                                        remove_stopwords_flag=False, 
+                                        punc_2_remove=string.punctuation.replace('-','').replace('%','').replace('.',''), 
+                                        remove_digits_flag=False,
+                                        remove_pattern_punc_flag=True)
+        result = remove_extra_spaces(result)
+        return result
+    
+    tqdm.pandas(desc='Preprocessing Raw Texts')
+    sample_data['PREPROCESSED_TEXT'] = sample_data.ARTICLES.progress_apply(lambda x: preprocess_text(x))
+    
+    # Implementing Pattern finder class
+    pattern_finder_instance = PatternFinder(data=sample_data, textual_col='PREPROCESSED_TEXT')
+    pattern_finder_instance.process_patterns() 
