@@ -8,6 +8,7 @@ __email__ = "rickykonwar@gmail.com"
 __status__ = "Development"
 
 import pandas as pd
+from utility.utility import load_spacy_model
 
 # Function for rule 1: noun(subject), verb, noun(object)
 def rule_nvn(text: str, spacy_loaded_model=None) -> list:
@@ -182,7 +183,7 @@ def rule_nvn_mod(text: str, spacy_loaded_model=None) -> list:
     return sent
 
 class PatternFinder:
-    def __init__(self, data: pd.DataFrame, textual_col: str, pattern: list = ['nvn','an','npn','nvn_mod'], spacy_model_name: str = 'en_core_web_lg') -> None:
+    def __init__(self, data: pd.DataFrame, textual_col: str, pattern_collection: list = ['nvn','an','npn','nvn_mod'], spacy_model_name: str = 'en_core_web_lg') -> None:
         """
         This is the pattern finder class which is responsible for extracting grammaticals combinations of 
         nouns as subjects, objects, verbs and prepositions as action and combination of compound nouns and adjectives
@@ -191,15 +192,16 @@ class PatternFinder:
         args:
         - data (pd.DataFrame): pandas dataframe consisting of textual content
         - textual_col (str): name of column in input pandas dataframe
-        - pattern (list, str): patterns to process
+        - pattern_collection (list, str): patterns to process
         
         return:
         - None
         """
         self._data = data
         self._textual_col = textual_col
-        self._pattern = pattern
+        self._pattern_collection = pattern_collection
         self._spacy_model_name = spacy_model_name
+        self._spacy_loaded_model = load_spacy_model(self._spacy_model_name, exclude_list=[])
         
         self._overall_extract = self._data.copy()
         self._nvn_seg_patterns = None
@@ -227,8 +229,25 @@ class PatternFinder:
     
     def process_patterns(self):
         """
+        This method is to run processes which would extract the input patterns
+        decided, merge them with thr original dataframe and also store them as output
+        extract
         """
-        pass
+        if 'nvn' in self._pattern_collection:
+            print('Extracting NVN phrases')
+            self._overall_extract['NVN_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_nvn(x, spacy_loaded_model = self._spacy_loaded_model))
+            
+        if 'an' in self._pattern_collection:
+            print('Extracting AN phrases')
+            self._overall_extract['AN_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_an(x, spacy_loaded_model = self._spacy_loaded_model))
+        
+        if 'npn' in self._pattern_collection:
+            print('Extracting NPN phrases')
+            self._overall_extract['NPN_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_npn(x, spacy_loaded_model = self._spacy_loaded_model))
+    
+        if 'nvn_mod' in self._pattern_collection:
+            print('Extracting NVN with Adjectives / Compound nouns based phrases')
+            self._overall_extract['NVN_MOD_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_nvn_mod(x, spacy_loaded_model = self._spacy_loaded_model))
     
     def extract_seg_nvn(self):
         """
