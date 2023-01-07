@@ -8,8 +8,11 @@ __email__ = "rickykonwar@gmail.com"
 __status__ = "Development"
 
 import os
+import sys
 import pandas as pd
 from tqdm import tqdm
+file_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(file_dir)
 
 from supporting_scripts_notebooks.sn_textual_preprocessing import *
 from utility.utility import load_spacy_model
@@ -238,20 +241,20 @@ class PatternFinder:
         extract
         """
         if 'nvn' in self._pattern_collection:
-            print('Extracting NVN phrases')
-            self._overall_extract['NVN_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_nvn(x, spacy_loaded_model = self._spacy_loaded_model))
+            tqdm.pandas(desc='Extracting NVN phrases')
+            self._overall_extract['NVN_PHRASES'] = self._overall_extract[self._textual_col].progress_apply(lambda x : rule_nvn(x, spacy_loaded_model = self._spacy_loaded_model))
             
         if 'an' in self._pattern_collection:
-            print('Extracting AN phrases')
-            self._overall_extract['AN_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_an(x, spacy_loaded_model = self._spacy_loaded_model))
+            tqdm.pandas(desc='Extracting AN phrases')
+            self._overall_extract['AN_PHRASES'] = self._overall_extract[self._textual_col].progress_apply(lambda x : rule_an(x, spacy_loaded_model = self._spacy_loaded_model))
         
         if 'npn' in self._pattern_collection:
-            print('Extracting NPN phrases')
-            self._overall_extract['NPN_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_npn(x, spacy_loaded_model = self._spacy_loaded_model))
+            tqdm.pandas(desc='Extracting NPN phrases')
+            self._overall_extract['NPN_PHRASES'] = self._overall_extract[self._textual_col].progress_apply(lambda x : rule_npn(x, spacy_loaded_model = self._spacy_loaded_model))
     
         if 'nvn_mod' in self._pattern_collection:
-            print('Extracting NVN with Adjectives / Compound nouns based phrases')
-            self._overall_extract['NVN_MOD_PHRASES'] = self._overall_extract[self._textual_col].apply(lambda x : rule_nvn_mod(x, spacy_loaded_model = self._spacy_loaded_model))
+            tqdm.pandas(desc='Extracting NVN with Adjectives / Compound nouns based phrases')
+            self._overall_extract['NVN_MOD_PHRASES'] = self._overall_extract[self._textual_col].progress_apply(lambda x : rule_nvn_mod(x, spacy_loaded_model = self._spacy_loaded_model))
     
     def extract_seg_nvn(self):
         """
@@ -282,7 +285,7 @@ if __name__ == "__main__":
     spacy_model_name = 'en_core_web_lg'
     
     # Reading input file
-    input_data = pd.read_csv(input_filepath)
+    input_data = pd.read_csv(test_data_path)
     input_data.columns = [col_name.upper() for col_name in input_data.columns]
     print(input_data.shape)
     
