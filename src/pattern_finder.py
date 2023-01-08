@@ -239,6 +239,12 @@ class PatternFinder:
         This method is to run processes which would extract the input patterns
         decided, merge them with thr original dataframe and also store them as output
         extract
+        
+        args:
+        - None
+        
+        returns:
+        - None
         """
         if 'nvn' in self._pattern_collection:
             tqdm.pandas(desc='Extracting NVN phrases')
@@ -258,9 +264,71 @@ class PatternFinder:
     
     def extract_seg_nvn(self):
         """
+        This method is to segregate the extracted NVN phrases into 3 separate columns noun1, verb and noun2.
+        
+        args:
+        - None
+        
+        return:
+        - None
         """
-        pass
-    
+        sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NVN_PHRASES']].copy().reset_index(drop=True)
+        # selecting non-empty output rows
+        nvn_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
+        try:
+            for row in tqdm(range(len(sample_data_copy)), desc='Selecting non empty rows'):
+                if len(sample_data_copy.loc[row,'NVN_PHRASES'])!=0:
+                    nvn_sample_data = pd.concat([nvn_sample_data, pd.DataFrame([sample_data_copy.loc[row,:]])], ignore_index=True)
+
+            # reset the index
+            nvn_sample_data.reset_index(inplace=True)
+            nvn_sample_data.drop('index', axis=1, inplace=True)   
+            print(nvn_sample_data.shape)
+        except Exception as ex:
+            print(ex)
+            pass
+        
+        verb_dict = dict()
+        dis_dict = dict()
+        dis_list = []
+        try:
+            # iterating over all the sentences
+            for i in range(len(nvn_sample_data)):
+                
+                # sentence containing the output
+                sentence = nvn_sample_data.loc[i,'PREPROCESSED_TEXT']
+                # catgeory info
+                category = nvn_sample_data.loc[i,'CATEGORIES']
+                # output of the sentence
+                output = nvn_sample_data.loc[i,'NVN_PHRASES']
+                
+                # iterating over all the outputs from the sentence
+                for sent in output:
+                    # separate subject, verb and object
+                    n1, v, n2 = sent['phrase'].split(sent['verb'])[0], sent['verb'], sent['phrase'].split(sent['verb'])[1]
+                    
+                    # append to list, along with the sentence
+                    dis_dict = {
+                        'PREPROCESSED_TEXT':sentence,
+                        'CATEGORY':category,
+                        'NOUN1':n1,
+                        'VERB':v,
+                        'NOUN2':n2}
+                    dis_list.append(dis_dict)
+                    
+                    # counting the number of sentences containing the verb
+                    verb = sent['phrase'].split()[1]
+                    if verb in verb_dict:
+                        verb_dict[verb]+=1
+                    else:
+                        verb_dict[verb]=1
+            
+            df_nvn_sep = pd.DataFrame(dis_list)
+        except Exception as ex:
+            print(ex)
+        finally:
+            self._nvn_seg_patterns = df_nvn_sep.copy()
+        
     def extract_seg_an(self):
         """
         """
@@ -312,3 +380,8 @@ if __name__ == "__main__":
     # Implementing Pattern finder class
     pattern_finder_instance = PatternFinder(data=sample_data, textual_col='PREPROCESSED_TEXT')
     pattern_finder_instance.process_patterns() 
+    
+    # Implement Segregating of NVN Phrases
+    pattern_finder_instance.extract_seg_nvn()
+    
+    print('here')
