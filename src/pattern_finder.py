@@ -275,6 +275,7 @@ class PatternFinder:
         sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NVN_PHRASES']].copy().reset_index(drop=True)
         # selecting non-empty output rows
         nvn_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
+        
         try:
             for row in tqdm(range(len(sample_data_copy)), desc='Selecting non empty rows'):
                 if len(sample_data_copy.loc[row,'NVN_PHRASES'])!=0:
@@ -398,7 +399,7 @@ class PatternFinder:
             
     def extract_seg_npn(self):
         """
-        This method is to segregate the extracted AN phrases into 2 separate columns adjective and noun.
+        This method is to segregate the extracted NPN phrases into 3 separate columns noun1, preposition and noun2.
         
         args:
         - None
@@ -426,7 +427,6 @@ class PatternFinder:
         preposition_dict = dict()
         dis_dict = dict()
         dis_list = []
-
         try:
             # iterating over all the sentences
             for i in range(len(npn_sample_data)):
@@ -467,9 +467,73 @@ class PatternFinder:
                     
     def extract_seg_nvn_an(self):
         """
+        This method is to segregate the extracted NVN AN phrases into 3 separate columns compound / adjective noun1,
+        verb and compound / adjective noun2.
+        
+        args:
+        - None
+        
+        return:
+        - None
         """
-        pass
-    
+        # selecting non-empty output rows
+        sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NVN_MOD_PHRASES']].copy().reset_index(drop=True)
+        nvn_mod_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
+
+        try:
+            for row in tqdm(range(len(sample_data_copy)), desc='Selecting non empty rows'):
+                if len(sample_data_copy.loc[row,'NVN_MOD_PHRASES'])!=0:
+                    nvn_mod_sample_data = pd.concat([nvn_mod_sample_data, pd.DataFrame([sample_data_copy.loc[row,:]])], ignore_index=True)
+
+            # reset the index
+            nvn_mod_sample_data.reset_index(inplace=True)
+            nvn_mod_sample_data.drop('index', axis=1, inplace=True)   
+            print(nvn_mod_sample_data.shape)
+        except Exception as ex:
+            print(ex)
+            pass
+        
+        verb_dict = dict()
+        dis_dict = dict()
+        dis_list = []
+        try:
+            # iterating over all the sentences
+            for i in range(len(nvn_mod_sample_data)):
+                
+                # sentence containing the output
+                sentence = nvn_mod_sample_data.loc[i,'PREPROCESSED_TEXT']
+                # catgeory info
+                category = nvn_mod_sample_data.loc[i,'CATEGORIES']
+                # output of the sentence
+                output = nvn_mod_sample_data.loc[i,'NVN_MOD_PHRASES']
+                
+                # iterating over all the outputs from the sentence
+                for sent in output:
+                    # separate subject, verb and object
+                    n1, v, n2 = sent['phrase'].split(sent['verb'])[0], sent['verb'], sent['phrase'].split(sent['verb'])[1]
+                    
+                    # append to list, along with the sentence
+                    dis_dict = {
+                        'PREPROCESSED_TEXT':sentence,
+                        'CATEGORY':category,
+                        'NOUN1':n1,
+                        'VERB':v,
+                        'NOUN2':n2}
+                    dis_list.append(dis_dict)
+                    
+                    # counting the number of sentences containing the verb
+                    verb = sent['verb']
+                    if verb in verb_dict:
+                        verb_dict[verb]+=1
+                    else:
+                        verb_dict[verb]=1
+
+            df_nvn_mod_sep = pd.DataFrame(dis_list)
+        except Exception as ex:
+            print(ex)
+        finally:
+            self._nvn_mod_seg_patterns = df_nvn_mod_sep.copy()
+            
 if __name__ == "__main__":
     # Test file path
     test_data_path = os.path.join('input','news_articles_dataset.csv')
@@ -515,3 +579,6 @@ if __name__ == "__main__":
     
     # Implement Segregating of NPN Phrases
     pattern_finder_instance.extract_seg_npn()
+    
+    # Implement Segregating of Compound / Adjective based NVN Phrases
+    pattern_finder_instance.extract_seg_nvn_an()
