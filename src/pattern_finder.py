@@ -272,6 +272,10 @@ class PatternFinder:
         return:
         - None
         """
+        if 'NVN_PHRASES' not in self._overall_extract.columns:
+            print('NVN Phrases are missing. Please re-run pattern finder with NVN phrases under pattern collectibles')
+            return
+            
         sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NVN_PHRASES']].copy().reset_index(drop=True)
         # selecting non-empty output rows
         nvn_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
@@ -340,6 +344,10 @@ class PatternFinder:
         return:
         - None
         """
+        if 'AN_PHRASES' not in self._overall_extract.columns:
+            print('AN Phrases are missing. Please re-run pattern finder with AN phrases under pattern collectibles')
+            return
+        
         # selecting non-empty output rows
         sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','AN_PHRASES']].copy().reset_index(drop=True)
         an_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
@@ -407,6 +415,10 @@ class PatternFinder:
         return:
         - None
         """
+        if 'NPN_PHRASES' not in self._overall_extract.columns:
+            print('NPN Phrases are missing. Please re-run pattern finder with NPN phrases under pattern collectibles')
+            return
+        
         # selecting non-empty output rows
         sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NPN_PHRASES']].copy().reset_index(drop=True)
         npn_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
@@ -476,6 +488,10 @@ class PatternFinder:
         return:
         - None
         """
+        if 'NVN_MOD_PHRASES' not in self._overall_extract.columns:
+            print('NVN MOD Phrases are missing. Please re-run pattern finder with NVN MOD phrases under pattern collectibles')
+            return
+        
         # selecting non-empty output rows
         sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NVN_MOD_PHRASES']].copy().reset_index(drop=True)
         nvn_mod_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
@@ -568,7 +584,12 @@ if __name__ == "__main__":
     sample_data['PREPROCESSED_TEXT'] = sample_data.ARTICLES.progress_apply(lambda x: preprocess_text(x))
     
     # Implementing Pattern finder class
-    pattern_finder_instance = PatternFinder(data=sample_data, textual_col='PREPROCESSED_TEXT')
+    pattern_finder_instance = PatternFinder(
+                                data=sample_data, 
+                                textual_col='PREPROCESSED_TEXT',
+                                # pattern_collection=['nvn']
+                                pattern_collection=['nvn','an','npn','nvn_mod']
+                            )
     pattern_finder_instance.process_patterns() 
     
     # Implement Segregating of NVN Phrases
