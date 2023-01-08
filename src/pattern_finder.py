@@ -398,9 +398,73 @@ class PatternFinder:
             
     def extract_seg_npn(self):
         """
+        This method is to segregate the extracted AN phrases into 2 separate columns adjective and noun.
+        
+        args:
+        - None
+        
+        return:
+        - None
         """
-        pass
-    
+        # selecting non-empty output rows
+        sample_data_copy = self._overall_extract[['ARTICLES','CATEGORIES','PREPROCESSED_TEXT','NPN_PHRASES']].copy().reset_index(drop=True)
+        npn_sample_data = pd.DataFrame(columns=sample_data_copy.columns)
+
+        try:
+            for row in tqdm(range(len(sample_data_copy)), desc='Selecting non empty rows'):
+                if len(sample_data_copy.loc[row,'NPN_PHRASES'])!=0:
+                    npn_sample_data = pd.concat([npn_sample_data, pd.DataFrame([sample_data_copy.loc[row,:]])], ignore_index=True)
+
+            # reset the index
+            npn_sample_data.reset_index(inplace=True)
+            npn_sample_data.drop('index', axis=1, inplace=True)   
+            print(npn_sample_data.shape)
+        except Exception as ex:
+            print(ex)
+            pass
+        
+        preposition_dict = dict()
+        dis_dict = dict()
+        dis_list = []
+
+        try:
+            # iterating over all the sentences
+            for i in range(len(npn_sample_data)):
+                
+                # sentence containing the output
+                sentence = npn_sample_data.loc[i,'PREPROCESSED_TEXT']
+                # catgeory info
+                category = npn_sample_data.loc[i,'CATEGORIES']
+                # output of the sentence
+                output = npn_sample_data.loc[i,'NPN_PHRASES']
+                
+                # iterating over all the outputs from the sentence
+                for sent in output:
+                    # separate subject, verb and object
+                    n1, prep, n2 = sent['phrase'].split()[:1], sent['phrase'].split()[1], sent['phrase'].split()[2:]
+                    
+                    # append to list, along with the sentence
+                    dis_dict = {
+                        'PREPROCESSED_TEXT':sentence,
+                        'CATEGORY':category,
+                        'NOUN1':n1,
+                        'PREPOSITION':prep,
+                        'NOUN2':n2}
+                    dis_list.append(dis_dict)
+                    
+                    # counting the number of sentences containing the verb
+                    preposition = sent['phrase'].split()[1]
+                    if prep in preposition_dict:
+                        preposition_dict[prep]+=1
+                    else:
+                        preposition_dict[prep]=1
+
+            df_npn_sep = pd.DataFrame(dis_list)
+        except Exception as ex:
+            print(ex)
+        finally:
+            self._npn_seg_patterns = df_npn_sep.copy()  
+                    
     def extract_seg_nvn_an(self):
         """
         """
@@ -448,3 +512,6 @@ if __name__ == "__main__":
     
     # Implement Segregating of AN Phrases
     pattern_finder_instance.extract_seg_an()
+    
+    # Implement Segregating of NPN Phrases
+    pattern_finder_instance.extract_seg_npn()
