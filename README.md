@@ -18,3 +18,5 @@ The prime objective of this repository is to build generic pipelines for text pr
 * [Acknowledgements](#acknowledgements)
 * [Contact](#contact)
 <!-- * [License](#license) -->
+
+## **General Information**
