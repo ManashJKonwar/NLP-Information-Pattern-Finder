@@ -20,3 +20,27 @@ The prime objective of this repository is to build generic pipelines for text pr
 <!-- * [License](#license) -->
 
 ## **General Information**
+
+### **What is Information extraction?**
+
+## **Technologies Used**
+
+## **Features**
+
+## **Screenshots**
+
+## **Setup**
+
+## **Dataset Utilized**
+
+## **Usage**
+
+## **Project Status**
+
+## **Room for Improvement**
+
+## **References**
+
+## **Acknowledgement**
+
+## **Contact**
